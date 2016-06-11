@@ -1,26 +1,25 @@
 
  -------  -------  -------  -------  ------- 
-|3      ||7      ||10     ||J      ||K      |
-|♣      ||♦      ||♣      ||♦      ||♣      |
+|9      ||10     ||J      ||Q      ||K      |
+|♣      ||♣      ||♣      ||♣      ||♣      |
 |       ||       ||       ||       ||       |
 |       ||       ||       ||       ||       |
 |       ||       ||       ||       ||       |
-|      ♣||      ♦||      ♣||      ♦||      ♣|
-|      3||      7||     10||      J||      K|
+|      ♣||      ♣||      ♣||      ♣||      ♣|
+|      9||     10||      J||      Q||      K|
  -------  -------  -------  -------  ------- 
 
  -------  -------  -------  -------  ------- 
-|6      ||8      ||10     ||J      ||A      |
-|♦      ||♦      ||♥      ||♣      ||♣      |
+|9      ||10     ||J      ||Q      ||K      |
+|♥      ||♥      ||♥      ||♥      ||♥      |
 |       ||       ||       ||       ||       |
 |       ||       ||       ||       ||       |
 |       ||       ||       ||       ||       |
-|      ♦||      ♦||      ♥||      ♣||      ♣|
-|      6||      8||     10||      J||      A|
+|      ♥||      ♥||      ♥||      ♥||      ♥|
+|      9||     10||      J||      Q||      K|
  -------  -------  -------  -------  ------- 
 
-The second player wins with highCard of A
-The first player had highCard of K
+Truly equal, both have straightFlush of 9
 
  -------  -------  -------  -------  ------- 
 |4      ||6      ||8      ||Q      ||A      |
@@ -526,7 +525,7 @@ The first player had highCard of 9
  -------  -------  -------  -------  ------- 
 
 The second player wins with highCard of A and highCard of Q
-The first player had highCard of A and highCard of 8
+The first player had highCard of A and highCard of 7
 
  -------  -------  -------  -------  ------- 
 |4      ||Q      ||K      ||A      ||A      |
@@ -6137,8 +6136,8 @@ The first player had highCard of K
 |      4||      6||      7||      8||      K|
  -------  -------  -------  -------  ------- 
 
-The first player wins with highCard of K and highCard of J
-The second player had highCard of K and highCard of 8
+The first player wins with highCard of K and highCard of 8
+The second player had highCard of K and highCard of 7
 
  -------  -------  -------  -------  ------- 
 |4      ||7      ||10     ||Q      ||A      |
@@ -9036,7 +9035,7 @@ The first player had highCard of Q
  -------  -------  -------  -------  ------- 
 
 The second player wins with highCard of Q and highCard of 9
-The first player had highCard of Q and highCard of 7
+The first player had highCard of Q and highCard of 4
 
  -------  -------  -------  -------  ------- 
 |5      ||8      ||9      ||J      ||Q      |
@@ -10691,8 +10690,8 @@ The first player had onePair of K
 |      3||      4||      7||     10||      Q|
  -------  -------  -------  -------  ------- 
 
-The second player wins with highCard of Q and highCard of 7
-The first player had highCard of Q and highCard of 6
+The first player wins with highCard of Q and highCard of 10
+The second player had highCard of Q and highCard of 7
 
  -------  -------  -------  -------  ------- 
 |7      ||9      ||9      ||J      ||K      |
@@ -22999,5 +22998,5 @@ The first player had onePair of 5
 The second player wins with onePair of 6
 The first player had onePair of 5
 
-The number of times the first player wins is 487
-The program ran in 32.445 ms
+The number of times the first player wins is 489
+The program ran in 31.862 ms

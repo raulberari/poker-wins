@@ -22,7 +22,7 @@ string rankuri[] = {"highCard", "onePair", "twoPairs", "threeOfAKind",
 struct structuraMana
 {
 	string ranku;
-	int valoare, aparitii[20], highCard; 
+	int valoare, valoare2, aparitii[20], highCard; 
 };
 structuraMana mana1, mana2;
 
@@ -88,7 +88,7 @@ void ordonare(string tura[], int n)
 	}
 }
 
-string rankul(string tura[], int &valoare, int aparitii[])
+string rankul(string tura[], int &valoare, int &valoare2, int aparitii[])
 {
 	string rankReturn = "";
 
@@ -153,7 +153,13 @@ string rankul(string tura[], int &valoare, int aparitii[])
 		rankReturn = "fourOfAKind";
 
 	else if (nrPerechi == 1 && treiCuie == true)
+	{
+		for (int i = 1; i <= 14; i++)
+			if (aparitii[i] == 2)
+				valoare2 = i;
+
 		rankReturn = "fullHouse";
+	}
 
 	else if (culoare == true)
 		rankReturn = "flush";
@@ -165,7 +171,13 @@ string rankul(string tura[], int &valoare, int aparitii[])
 		rankReturn = "threeOfAKind";
 
 	else if (nrPerechi == 2)
+	{
+		for (int i = 1; i <= 14; i++)
+			if (aparitii[i] == 2 && i != valoare)
+				valoare2 = i;
+
 		rankReturn = "twoPairs";
+	}
 
 	else if (nrPerechi == 1)
 		rankReturn = "onePair";
@@ -257,38 +269,39 @@ string numarInLitera(int nr)
 	return liter;
 }
 
-bool castigaPrimulHighCard(structuraMana &mana1, structuraMana &mana2)
+int castigaPrimulHighCard(structuraMana &mana1, structuraMana &mana2)
 {
 	int i1 = 14, i2 = 14;
 	while (i1 >= 0 && i2 >= 0)
 	{
-		while (mana1.aparitii[i1] == 0 || i1 == mana1.valoare)
+		while (mana1.aparitii[i1] == 0 || i1 == mana1.valoare || i1 == mana1.valoare2)
 			i1--;
-		while (mana2.aparitii[i2] == 0 || i2 == mana2.valoare)
+		while (mana2.aparitii[i2] == 0 || i2 == mana2.valoare || i2 == mana2.valoare2)
 			i2--;
 
 		if (i1 > i2)
 		{
 			mana1.highCard = i1;
 			mana2.highCard = i2;
-			return true;
+			return 1;
 		}
 		if (i2 > i1)
 		{
 			mana1.highCard = i1;
 			mana2.highCard = i2;
-			return false;
+			return 0;
 		}
 		else
 			i1--, i2--;
 	}
+	return -1;
 } 
 
 bool primulCastigator(string tura1[], string tura2[])
 {
 
-	mana1.ranku = rankul(tura1, mana1.valoare, mana1.aparitii);
-	mana2.ranku = rankul(tura2, mana2.valoare, mana2.aparitii);
+	mana1.ranku = rankul(tura1, mana1.valoare, mana1.valoare2, mana1.aparitii);
+	mana2.ranku = rankul(tura2, mana2.valoare, mana2.valoare2, mana2.aparitii);
 
 
 	int poz1, poz2;
@@ -344,9 +357,34 @@ bool primulCastigator(string tura1[], string tura2[])
 				<< " of " << numarInLitera(mana1.valoare) << "\n";
 			return false;
 		}
+		else if (mana1.ranku == "twoPairs" || mana1.ranku == "fullHouse")
+		{
+			if (mana1.valoare2 > mana2.valoare2)
+			{
+				fout << "The first player wins with " << mana1.ranku 
+					<< " of " << numarInLitera(mana1.valoare) << " and " 
+					<< numarInLitera(mana1.valoare2) << "\n";
+
+				fout << "The second player had " << mana2.ranku 
+					<< " of " << numarInLitera(mana2.valoare) << " and " 
+					<< numarInLitera(mana2.valoare2) << "\n";
+				return true;
+			}
+			else if (mana1.valoare2 < mana2.valoare2)
+			{
+				fout << "The second player wins with " << mana2.ranku 
+					<< " of " << numarInLitera(mana2.valoare) << " and " 
+					<< numarInLitera(mana2.valoare2) << "\n";
+
+				fout << "The first player had " << mana1.ranku 
+					<< " of " << numarInLitera(mana1.valoare) << " and " 
+					<< numarInLitera(mana1.valoare2) << "\n";
+				return false;
+			}
+		}
 		else
 		{
-			if (castigaPrimulHighCard(mana1, mana2))
+			if (castigaPrimulHighCard(mana1, mana2) == 1)
 			{
 				fout << "The first player wins with " << mana1.ranku << " of " 
 					<< numarInLitera(mana1.valoare) << " and highCard of " 
@@ -357,7 +395,7 @@ bool primulCastigator(string tura1[], string tura2[])
 					<< numarInLitera(mana2.highCard) << "\n";
 				return true;
 			}
-			else
+			else if (castigaPrimulHighCard(mana1, mana2) == 0)
 			{
 				fout << "The second player wins with " << mana2.ranku << " of " 
 					<< numarInLitera(mana2.valoare) << " and highCard of " 
@@ -367,6 +405,11 @@ bool primulCastigator(string tura1[], string tura2[])
 					<< numarInLitera(mana1.valoare) << " and highCard of " 
 					<< numarInLitera(mana1.highCard) << "\n";
 				return false;
+			}
+			else
+			{
+				fout << "Truly equal, both have " << mana1.ranku << " of "
+					<< numarInLitera(mana1.valoare) << "\n";
 			}	
 		}
 	}
