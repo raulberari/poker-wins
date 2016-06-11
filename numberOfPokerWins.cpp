@@ -9,25 +9,29 @@ using namespace std;
 ifstream fin("carti.txt");
 ofstream fout("poker.out");
 
-
-int primul, n;
+//n should be less than or equal to 10000
+int firstPlayer, secondPlayer, ties, n;
 
 string carti1[100005][10], carti2[100005][10];
-string tura1[10], tura2[10];
+string game1[10], game2[10];
 
-string rankuri[] = {"highCard", "onePair", "twoPairs", "threeOfAKind",
+string rankri[] = {"highCard", "onePair", "twoPairs", "threeOfAKind",
 			"straight", "flush", "fullHouse", "fourOfAKind", "straightFlush",
 			"royalFlush"};
 
-struct structuraMana
+struct handStructure
 {
-	string ranku;
-	int valoare, valoare2, aparitii[20], highCard; 
+	string rank; 
+	int value, value2, highCard, frequency[20]; 
+	//value determines the primary value of the rank
+	//value2 is the secondary value, used in the case of the lower pair from twoPairs and the pair from fullHouse
+	//highCard is used if all the other values are equal
+	//frequency[] registers the frequency of each card in one hand
 };
-structuraMana mana1, mana2;
+handStructure hand1, hand2; 
 
 
-void citire()
+void read()
 {
 	fin >> n;
 	for (int i = 1; i <= n; i++)
@@ -40,255 +44,281 @@ void citire()
 	}
 }
 
-void stergere(int v[], int n)
+void frequencyReset(int v[], int n)
 {
 	for (int i = 1; i <= n; i++)
 		v[i] = 0;
 }
 
-int transformaLiteraInNumar(string litera)
+int letterToNumber(string letter)
 {
 	int nr1;
-	nr1 = atoi(litera.c_str());
+	nr1 = atoi(letter.c_str());
 
 	if (nr1 == 0)
 	{
-		if (litera == "T")
+		if (letter == "T")
 			nr1 = 10;
-		else if (litera == "J")
+		else if (letter == "J")
 			nr1 = 11;
-		else if (litera == "Q")
+		else if (letter == "Q")
 			nr1 = 12;
-		else if (litera == "K")
+		else if (letter == "K")
 			nr1 = 13;
-		else if (litera == "A")
+		else if (letter == "A")
 			nr1 = 14;
 	}
 
 	return nr1;
 }
 
-void ordonare(string tura[], int n)
+void sort(string game[], int n)
 {
 	for (int i = 1; i < n; i++)
 	{
 		for (int j = i + 1; j <= n; j++)
 		{
 			int nr1, nr2;
-			string litera;
-			litera = tura[i][0];
-			nr1 = transformaLiteraInNumar(litera);
+			string letter;
+			letter = game[i][0];
+			nr1 = letterToNumber(letter);
 
-			litera = tura[j][0];
-			nr2 = transformaLiteraInNumar(litera);
+			letter = game[j][0];
+			nr2 = letterToNumber(letter);
 
 			if (nr1 > nr2)
-				swap(tura[i], tura[j]);
+				swap(game[i], game[j]);
 		}
 	}
 }
 
-string rankul(string tura[], int &valoare, int &valoare2, int aparitii[])
+string rankCalculation(string game[], int &value, int &value2, int frequency[])
 {
 	string rankReturn = "";
 
-	stergere(aparitii, 14);
-	ordonare(tura, 5);
+	frequencyReset(frequency, 14);
+	sort(game, 5);
 
+	//the letters are transformed into a number and then registered in the frequency array
 	for (int i = 1; i <= 5; i++)
 	{
-		string litera;
-		litera = tura[i][0];
-		int nr = transformaLiteraInNumar(litera);
+		string letter;
+		letter = game[i][0];
+		int nr = letterToNumber(letter);
 
-		aparitii[nr]++;
+		frequency[nr]++;
 	}
 
-	int nrPerechi = 0;
-	bool treiCuie = false, careu = false, chinta = false, culoare = false;
+	//the number of pairs is counted, while the others can be either true or false
+	int pairNumber = 0;
+	bool threeOfAKind = false, fourOfAKind = false, straight = false, flush = false;
 
 	for (int i = 1; i <= 14; i++)
 	{
-		if (aparitii[i] == 2)
-			nrPerechi++, valoare = i;
+		if (frequency[i] == 2)
+			pairNumber++, value = i; //the value of the highest pair
 
-		if (aparitii[i] == 4)
-			careu = true, valoare = i;
+		if (frequency[i] == 4)
+			fourOfAKind = true, value = i;
 	}
 
 	for (int i = 1; i <= 14; i++)
 	{
-		if (aparitii[i] == 3)
+		if (frequency[i] == 3)
 		{
-			treiCuie = true;
-			valoare = i;
+			threeOfAKind = true;
+			value = i; //in the case of another pair coexisting, meaning a fullHouse is created, the primary value shifts to the one of the threeOfAKind
 		}
 	}
 
-	if (tura[1][1] == tura[2][1] && tura[1][1] == tura[3][1] &&
-	 tura[1][1] == tura[4][1] && tura[1][1] == tura[5][1])
+	//comparing the suits
+	if (game[1][1] == game[2][1] && game[1][1] == game[3][1] &&
+	 game[1][1] == game[4][1] && game[1][1] == game[5][1])
 	{
-		culoare = true;
+		flush = true;
 		for (int i = 1; i <= 14; i++)
 		{
-			if (aparitii[i] == 1)
-				valoare = i;
+			if (frequency[i] == 1)
+				value = i;
 		}
 	}
 
+	//comparing consecutive cards
 	for (int i = 1; i <= 10; i++)
 	{
-		if (aparitii[i] == 1 && aparitii[i+1] == 1 && aparitii[i+2] == 1 &&
-			aparitii[i+3] && aparitii[i+4] == 1)
-			chinta = true, valoare = i;
+		if (frequency[i] == 1 && frequency[i+1] == 1 && frequency[i+2] == 1 &&
+			frequency[i+3] && frequency[i+4] == 1)
+			straight = true, value = i;
 	}
 		
-	if (chinta == true && culoare == true && valoare == 10)
-		return "royalFlush";
+	if (straight == true && flush == true && value == 10)
+		rankReturn = "royalFlush";
 
-	else if (chinta == true && culoare == true)
-		return "straightFlush";
+	else if (straight == true && flush == true)
+		rankReturn = "straightFlush";
 
-	else if (careu == true)
+	else if (fourOfAKind == true)
 		rankReturn = "fourOfAKind";
 
-	else if (nrPerechi == 1 && treiCuie == true)
+	else if (pairNumber == 1 && threeOfAKind == true)
 	{
 		for (int i = 1; i <= 14; i++)
-			if (aparitii[i] == 2)
-				valoare2 = i;
+			if (frequency[i] == 2)
+				value2 = i;
+		//the secondary value, the one of the pair, is found
 
 		rankReturn = "fullHouse";
 	}
 
-	else if (culoare == true)
+	else if (flush == true)
 		rankReturn = "flush";
 
-	else if (chinta == true)
+	else if (straight == true)
 		rankReturn = "straight";
 
-	else if (treiCuie == true)
+	else if (threeOfAKind == true)
 		rankReturn = "threeOfAKind";
 
-	else if (nrPerechi == 2)
+	else if (pairNumber == 2)
 	{
 		for (int i = 1; i <= 14; i++)
-			if (aparitii[i] == 2 && i != valoare)
-				valoare2 = i;
+			if (frequency[i] == 2 && i != value)
+				value2 = i;
+		//the secondary value, the one of the lower pair, is found
 
 		rankReturn = "twoPairs";
 	}
 
-	else if (nrPerechi == 1)
+	else if (pairNumber == 1)
 		rankReturn = "onePair";
 
 	else
 	{
 		for (int i = 1; i <= 14; i++)
 		{
-			if (aparitii[i] == 1)
-				valoare = i;
+			if (frequency[i] == 1)
+				value = i;
 		}
+		//the primary value is found and returned in the case of other higher ranks not existing
 		rankReturn = "highCard";
 	}
 
 	return rankReturn;
 }
 
-string colori(string litera)
+string suits(string letter)
 {
-	string cul;
-	if (litera == "S")
-		cul = "♠";
-	else if (litera == "D")
-		cul = "♦";
-	else if (litera == "C")
-		cul = "♣";
-	else if (litera == "H")
-		cul = "♥";
+	//a function to aid in the ASCII representation of the cards
+	string suit;
+	if (letter == "S")
+		suit= "♠";
+	else if (letter == "D")
+		suit= "♦";
+	else if (letter == "C")
+		suit= "♣";
+	else if (letter == "H")
+		suit= "♥";
 
-	return cul;
+	return suit;
 }
 
-void afisareCarte(string tura[])
+void printCards(string game[])
 {
-	string lit1, lit2, lit3, lit4, lit5;
-	lit1 = tura[1][1];
-	lit2 = tura[2][1];
-	lit3 = tura[3][1];
-	lit4 = tura[4][1];
-	lit5 = tura[5][1];
+	//it prints 5 cards with their values and suits
 
+	string letter;
+
+	//the upper margin
 	fout << " -------  -------  -------  -------  ------- \n";
+
+	//the values in the upper left corners
 	for (int i = 1; i <= 5; i++)
 	{
 		int a;
-		string lit;
-		lit = tura[i][0];
-		a = transformaLiteraInNumar(lit);
+		letter = game[i][0];
+		a = letterToNumber(letter);
 		if (a != 10)
-			fout << "|" << tura[i][0] << "      |";
+			fout << "|" << game[i][0] << "      |";
 		else
 			fout << "|" << "10     |";
 	}
-	fout << endl;
-	fout << "|" << colori(lit1) << "      ||" << colori(lit2) << "      ||" << colori(lit3) << "      ||" << colori(lit4) << "      ||" << colori(lit5) << "      |\n";
-	fout << "|       ||       ||       ||       ||       |\n";
-	fout << "|       ||       ||       ||       ||       |\n";
-	fout << "|       ||       ||       ||       ||       |\n";
-	fout << "|      " << colori(lit1) << "||      " << colori(lit2) << "||      " << colori(lit3) << "||      " << colori(lit4) << "||      " << colori(lit5) << "|\n";
+	fout << "\n";
+
+	//the suits in the upper left corners
+	for (int i = 1; i <= 5; i++)
+	{
+		letter = game[i][1];
+		fout << "|" << suits(letter) << "      |";
+	}
+	fout << "\n";
+
+	//the lateral margins of the cards
+	for (int i = 1; i <= 3; i++)
+		fout << "|       ||       ||       ||       ||       |\n";
+
+	//the suits in the lower right corners
+	for (int i = 1; i <= 5; i++)
+	{
+		letter = game[i][1];
+		fout << "|      " << suits(letter) << "|";
+	}
+	fout << "\n";
+
+	//the values in the lower right corners
 	for (int i = 1; i <= 5; i++)
 	{
 		int a;
-		string lit;
-		lit = tura[i][0];
-		a = transformaLiteraInNumar(lit);
+		letter = game[i][0];
+		a = letterToNumber(letter);
 		if (a != 10)
-			fout << "|      " << tura[i][0] << "|";
+			fout << "|      " << game[i][0] << "|";
 		else
 			fout << "|     " << "10|";
 	}
-	fout << endl;
+	fout << "\n";
+
+	//the lower margin
 	fout << " -------  -------  -------  -------  ------- \n";
 }
 
-string numarInLitera(int nr)
+string numberToLetter(int nr)
 {
-	string liter;
+	string letter;
 	if (nr <= 10)
-		liter = to_string(nr);
+		letter = to_string(nr);
 	else if (nr == 11)
-		liter = "J";
+		letter = "J";
 	else if (nr == 12)
-		liter = "Q";
+		letter = "Q";
 	else if (nr == 13)
-		liter = "K";
+		letter = "K";
 	else if (nr == 14)
-		liter = "A";
+		letter = "A";
 
-	return liter;
+	return letter;
 }
 
-int castigaPrimulHighCard(structuraMana &mana1, structuraMana &mana2)
+int theFirstOnesWinsHighCard(handStructure &hand1, handStructure &hand2)
 {
+	//returns 1 if the first player wins, 0 if the second one wins, -1 in the special case of a tie
 	int i1 = 14, i2 = 14;
 	while (i1 >= 0 && i2 >= 0)
 	{
-		while (mana1.aparitii[i1] == 0 || i1 == mana1.valoare || i1 == mana1.valoare2)
+		while (hand1.frequency[i1] == 0 || i1 == hand1.value )
 			i1--;
-		while (mana2.aparitii[i2] == 0 || i2 == mana2.valoare || i2 == mana2.valoare2)
+		while (hand2.frequency[i2] == 0 || i2 == hand2.value)
 			i2--;
 
 		if (i1 > i2)
 		{
-			mana1.highCard = i1;
-			mana2.highCard = i2;
+			hand1.highCard = i1;
+			hand2.highCard = i2;
 			return 1;
 		}
 		if (i2 > i1)
 		{
-			mana1.highCard = i1;
-			mana2.highCard = i2;
+			hand1.highCard = i1;
+			hand2.highCard = i2;
 			return 0;
 		}
 		else
@@ -297,119 +327,176 @@ int castigaPrimulHighCard(structuraMana &mana1, structuraMana &mana2)
 	return -1;
 } 
 
-bool primulCastigator(string tura1[], string tura2[])
+int theFirstWins(string game1[], string game2[])
 {
 
-	mana1.ranku = rankul(tura1, mana1.valoare, mana1.valoare2, mana1.aparitii);
-	mana2.ranku = rankul(tura2, mana2.valoare, mana2.valoare2, mana2.aparitii);
+	hand1.rank = rankCalculation(game1, hand1.value, hand1.value2, hand1.frequency);
+	hand2.rank = rankCalculation(game2, hand2.value, hand2.value2, hand2.frequency);
 
 
 	int poz1, poz2;
 
 	for (int i = 0; i < 10; i++)
 	{
-		if (mana1.ranku == rankuri[i])
+		if (hand1.rank == rankri[i])
 			poz1 = i;
 
-		if (mana2.ranku == rankuri[i])
+		if (hand2.rank == rankri[i])
 			poz2 = i;
 	}
 	fout << "\n";
-	afisareCarte(tura1);
+	printCards(game1);
 	fout << "\n";
 
-	afisareCarte(tura2);
+	printCards(game2);
 	fout << "\n";
 	if (poz1 > poz2)
 	{
-		fout << "The first player wins with " << mana1.ranku 
-			<< " of " << numarInLitera(mana1.valoare) << "\n";
+		fout << "The first player wins with " << hand1.rank 
+			<< " of " << numberToLetter(hand1.value) << "\n";
 
-		fout << "The second player had " << mana2.ranku 
-			<< " of " << numarInLitera(mana2.valoare) << "\n";
-		return true;
+		fout << "The second player had " << hand2.rank 
+			<< " of " << numberToLetter(hand2.value) << "\n";
+		return 1;
 	}
 	else if (poz1 < poz2)
 	{
-		fout << "The second player wins with " << mana2.ranku 
-			<< " of " << numarInLitera(mana2.valoare) << "\n";
-		fout << "The first player had " << mana1.ranku 
-			<< " of " << numarInLitera(mana1.valoare) << "\n";
-		return false;
+		fout << "The second player wins with " << hand2.rank 
+			<< " of " << numberToLetter(hand2.value) << "\n";
+		fout << "The first player had " << hand1.rank 
+			<< " of " << numberToLetter(hand1.value) << "\n";
+		return 0;
 	}
 	else
 	{
-		if (mana1.valoare > mana2.valoare)
+		if (hand1.value > hand2.value)
 		{
-			fout << "The first player wins with " << mana1.ranku 
-				<< " of " << numarInLitera(mana1.valoare) << "\n";
+			fout << "The first player wins with " << hand1.rank 
+				<< " of " << numberToLetter(hand1.value);
 
-			fout << "The second player had " << mana2.ranku 
-				<< " of " << numarInLitera(mana2.valoare) << "\n";
-			return true;
-		}
-		else if (mana1.valoare < mana2.valoare)
-		{
-			fout << "The second player wins with " << mana2.ranku 
-				<< " of " << numarInLitera(mana2.valoare) << "\n";
+			if (hand1.rank == "twoPairs" || hand1.rank == "fullHouse")
+				fout << " and " << numberToLetter(hand1.value2);
 
-			fout << "The first player had " << mana1.ranku 
-				<< " of " << numarInLitera(mana1.valoare) << "\n";
-			return false;
+			fout << "\n";
+
+			fout << "The second player had " << hand2.rank 
+				<< " of " << numberToLetter(hand2.value);
+
+			if (hand2.rank == "twoPairs" || hand2.rank == "fullHouse")
+				fout << " and " << numberToLetter(hand2.value2);
+
+			fout << "\n";
+
+			return 1;
 		}
-		else if (mana1.ranku == "twoPairs" || mana1.ranku == "fullHouse")
+		else if (hand1.value < hand2.value)
 		{
-			if (mana1.valoare2 > mana2.valoare2)
+			fout << "The second player wins with " << hand2.rank 
+				<< " of " << numberToLetter(hand2.value);
+
+			if (hand2.rank == "twoPairs" || hand2.rank == "fullHouse")
+				fout << " and " << numberToLetter(hand2.value2);
+
+			fout << "\n";
+
+			fout << "The first player had " << hand1.rank 
+				<< " of " << numberToLetter(hand1.value);
+
+			if (hand1.rank == "twoPairs" || hand1.rank == "fullHouse")
+				fout << " and " << numberToLetter(hand1.value2);
+
+			fout << "\n";
+			return 0;
+		}
+		else if (hand1.rank == "twoPairs" || hand1.rank == "fullHouse")
+		{
+			if (hand1.value2 > hand2.value2)
 			{
-				fout << "The first player wins with " << mana1.ranku 
-					<< " of " << numarInLitera(mana1.valoare) << " and " 
-					<< numarInLitera(mana1.valoare2) << "\n";
+				fout << "The first player wins with " << hand1.rank 
+					<< " of " << numberToLetter(hand1.value) << " and " 
+					<< numberToLetter(hand1.value2) << "\n";
 
-				fout << "The second player had " << mana2.ranku 
-					<< " of " << numarInLitera(mana2.valoare) << " and " 
-					<< numarInLitera(mana2.valoare2) << "\n";
-				return true;
+				fout << "The second player had " << hand2.rank 
+					<< " of " << numberToLetter(hand2.value) << " and " 
+					<< numberToLetter(hand2.value2) << "\n";
+				return 1;
 			}
-			else if (mana1.valoare2 < mana2.valoare2)
+			else if (hand1.value2 < hand2.value2)
 			{
-				fout << "The second player wins with " << mana2.ranku 
-					<< " of " << numarInLitera(mana2.valoare) << " and " 
-					<< numarInLitera(mana2.valoare2) << "\n";
+				fout << "The second player wins with " << hand2.rank 
+					<< " of " << numberToLetter(hand2.value) << " and " 
+					<< numberToLetter(hand2.value2) << "\n";
 
-				fout << "The first player had " << mana1.ranku 
-					<< " of " << numarInLitera(mana1.valoare) << " and " 
-					<< numarInLitera(mana1.valoare2) << "\n";
-				return false;
+				fout << "The first player had " << hand1.rank 
+					<< " of " << numberToLetter(hand1.value) << " and " 
+					<< numberToLetter(hand1.value2) << "\n";
+				return 0;
+			}
+			else
+			{
+				if (theFirstOnesWinsHighCard(hand1, hand2) == 1)
+				{
+					fout << "The first player wins with " << hand1.rank << " of " 
+						<< numberToLetter(hand1.value) << " and " 
+						<< numberToLetter(hand1.value2) << " and highCard of " 
+						<< numberToLetter(hand1.highCard) << "\n";
+
+					fout << "The second player had " << hand2.rank << " of " 
+						<< numberToLetter(hand2.value) << " and " 
+						<< numberToLetter(hand2.value2) << " and highCard of "
+						<< numberToLetter(hand2.highCard) << "\n";
+					return 1;
+				}
+				else if (theFirstOnesWinsHighCard(hand1, hand2) == 0)
+				{
+					fout << "The second player wins with " << hand2.rank << " of " 
+						<< numberToLetter(hand2.value) << " and " 
+						<< numberToLetter(hand2.value2) << " and highCard of " 
+						<< numberToLetter(hand2.highCard) << "\n";
+
+					fout << "The first player had " << hand1.rank << " of " 
+						<< numberToLetter(hand1.value) << " and " 
+						<< numberToLetter(hand1.value2) << " and highCard of " 
+						<< numberToLetter(hand1.highCard) << "\n";
+					return 0;
+				}
+				else
+				{
+					fout << "Truly equal, both have " << hand1.rank << " of "
+						<< numberToLetter(hand1.value) << " and " << numberToLetter(hand1.value2) << "\n";
+					return -1;
+				}
 			}
 		}
 		else
 		{
-			if (castigaPrimulHighCard(mana1, mana2) == 1)
+			if (theFirstOnesWinsHighCard(hand1, hand2) == 1)
 			{
-				fout << "The first player wins with " << mana1.ranku << " of " 
-					<< numarInLitera(mana1.valoare) << " and highCard of " 
-					<< numarInLitera(mana1.highCard) << "\n";
+				fout << "The first player wins with " << hand1.rank << " of " 
+					<< numberToLetter(hand1.value) << " and highCard of " 
+					<< numberToLetter(hand1.highCard) << "\n";
 
-				fout << "The second player had " << mana2.ranku << " of " 
-					<< numarInLitera(mana2.valoare) << " and highCard of "
-					<< numarInLitera(mana2.highCard) << "\n";
-				return true;
+				fout << "The second player had " << hand2.rank << " of " 
+					<< numberToLetter(hand2.value) << " and highCard of "
+					<< numberToLetter(hand2.highCard) << "\n";
+				return 1;
 			}
-			else if (castigaPrimulHighCard(mana1, mana2) == 0)
+			else if (theFirstOnesWinsHighCard(hand1, hand2) == 0)
 			{
-				fout << "The second player wins with " << mana2.ranku << " of " 
-					<< numarInLitera(mana2.valoare) << " and highCard of " 
-					<< numarInLitera(mana2.highCard) << "\n";
+				fout << "The second player wins with " << hand2.rank << " of " 
+					<< numberToLetter(hand2.value) << " and highCard of " 
+					<< numberToLetter(hand2.highCard) << "\n";
 
-				fout << "The first player had " << mana1.ranku << " of " 
-					<< numarInLitera(mana1.valoare) << " and highCard of " 
-					<< numarInLitera(mana1.highCard) << "\n";
-				return false;
+				fout << "The first player had " << hand1.rank << " of " 
+					<< numberToLetter(hand1.value) << " and highCard of " 
+					<< numberToLetter(hand1.highCard) << "\n";
+				return 0;
 			}
 			else
 			{
-				fout << "Truly equal, both have " << mana1.ranku << " of "
-					<< numarInLitera(mana1.valoare) << "\n";
+				fout << "Truly equal, both have " << hand1.rank << " of "
+					<< numberToLetter(hand1.value) << "\n";
+				return -1;
 			}	
 		}
 	}
@@ -419,15 +506,22 @@ int main()
 {
 	clock_t start = clock();
 
-	citire();
+	read();
 
 	for (int i = 1; i <= n; i++)
 	{
-		if (primulCastigator(carti1[i], carti2[i]))
-			primul++;
+		int win = theFirstWins(carti1[i], carti2[i]);
+		if (win == 1)
+			firstPlayer++;
+		else if (win == 0)
+			secondPlayer++;
+		else
+			ties++;
 	}
 	
-	fout << "\nThe number of times the first player wins is " << primul << "\n";
+	fout << "\nThe first player won " << firstPlayer << " times\n";
+	fout << "The second player won " << secondPlayer << " times\n";
+	fout << "There were " << ties << " ties\n";
 
 	clock_t end = clock();
 	double time = (double) (end-start) / CLOCKS_PER_SEC * 1000.0;
