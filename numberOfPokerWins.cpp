@@ -12,7 +12,7 @@ ofstream fout("poker.out");
 //n should be less than or equal to 10000
 int firstPlayer, secondPlayer, ties, n;
 
-string carti1[100005][10], carti2[100005][10];
+string carti1[1000005][10], carti2[1000005][10];
 string game1[10], game2[10];
 
 string rankri[] = {"highCard", "onePair", "twoPairs", "threeOfAKind",
@@ -353,18 +353,41 @@ int theFirstWins(string game1[], string game2[])
 	if (poz1 > poz2)
 	{
 		fout << "The first player wins with " << hand1.rank 
-			<< " of " << numberToLetter(hand1.value) << "\n";
+			<< " of " << numberToLetter(hand1.value);
+
+		if (hand1.rank == "twoPairs" || hand1.rank == "fullHouse")
+			fout << " and " << numberToLetter(hand1.value2);
+
+		fout << "\n";
 
 		fout << "The second player had " << hand2.rank 
-			<< " of " << numberToLetter(hand2.value) << "\n";
+			<< " of " << numberToLetter(hand2.value);
+
+		if (hand2.rank == "twoPairs" || hand2.rank == "fullHouse")
+			fout << " and " << numberToLetter(hand2.value2);
+
+		fout << "\n";
+
 		return 1;
 	}
 	else if (poz1 < poz2)
 	{
 		fout << "The second player wins with " << hand2.rank 
-			<< " of " << numberToLetter(hand2.value) << "\n";
+			<< " of " << numberToLetter(hand2.value);
+
+		if (hand2.rank == "twoPairs" || hand2.rank == "fullHouse")
+				fout << " and " << numberToLetter(hand2.value2);
+
+		fout << "\n";
+
 		fout << "The first player had " << hand1.rank 
 			<< " of " << numberToLetter(hand1.value) << "\n";
+
+		if (hand1.rank == "twoPairs" || hand1.rank == "fullHouse")
+				fout << " and " << numberToLetter(hand1.value2);
+
+		fout << "\n";
+		
 		return 0;
 	}
 	else
